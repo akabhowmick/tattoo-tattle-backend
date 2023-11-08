@@ -7,12 +7,10 @@
     "seed": "ts-node prisma/seed.js"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "nodemon",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "clear": "node clear-db.js",
-    "seed": "node reseed-db.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",

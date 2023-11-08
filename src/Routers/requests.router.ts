@@ -8,37 +8,37 @@ import {
   artistAuthenticationMiddleware,
   // @ts-ignore
 } from "./auth-utils.ts";
-import { Request } from "../types/interface";
+import { TattooRequest } from "../types/interface";
 const prisma = new PrismaClient();
 
-const requestsRouter = Router();
+const tattooRequestsRouter = Router();
 
 //no auth required
-requestsRouter.get("/", async (_req, res) => {
-  const requests = await prisma.request.findMany();
-  res.status(200).send(requests);
+tattooRequestsRouter.get("/", async (_req, res) => {
+  const tattooRequests = await prisma.tattooRequest.findMany();
+  res.status(200).send(tattooRequests);
 });
 
 //no auth required
-requestsRouter.get("/:id", async (req, res) => {
+tattooRequestsRouter.get("/:id", async (req, res) => {
   const id = +req.params.id;
-  const request = await prisma.request
+  const tattooRequest = await prisma.tattooRequest
     .findUnique({
       where: {
         id,
       },
     })
     .catch(() => "server-error");
-  if (request === "server-error") {
+  if (tattooRequest === "server-error") {
     return res.status(400).send({ message: "id should be a number" });
   }
-  if (!request) {
+  if (!tattooRequest) {
     return res.status(204).send({ error: "Nothing found" });
   }
-  return res.status(200).send(request);
+  return res.status(200).send(tattooRequest);
 });
 
-const requestSchema = z.object({
+const tattooRequestSchema = z.object({
   clientName: z.string(),
   artistName: z.string(),
   messageBody: z.string(),
@@ -48,23 +48,23 @@ const requestSchema = z.object({
   clientId: z.number(),
   id: z.number(),
 });
-const createRequestSchema = requestSchema.omit({ id: true }).strict();
+const createTattooRequestSchema = tattooRequestSchema.omit({ id: true }).strict();
 
 //client authentication used
-requestsRouter.post(
+tattooRequestsRouter.post(
   "/",
   validateRequest({
-    body: createRequestSchema,
+    body: createTattooRequestSchema,
   }),
   clientAuthenticationMiddleware,
   async (req, res) => {
     try {
-      const newRequest = await prisma.request.create({
+      const newTattooRequest = await prisma.tattooRequest.create({
         data: {
           ...req.body,
         },
       });
-      res.status(201).send(newRequest);
+      res.status(201).send(newTattooRequest);
     } catch (error) {
       console.log(error);
       res.status(400).send({ error: "Server Side Error" });
@@ -73,18 +73,18 @@ requestsRouter.post(
 );
 
 //artist authentication and authorization needed
-const updateRequestSchema = createRequestSchema.partial();
-requestsRouter.patch(
+const updateTattooRequestSchema = createTattooRequestSchema.partial();
+tattooRequestsRouter.patch(
   "/:id",
   artistAuthenticationMiddleware,
   validateRequest({
-    body: updateRequestSchema.strict().partial(),
+    body: updateTattooRequestSchema.strict().partial(),
   }),
   async (req, res) => {
     const authorizedArtistId = req.user!.id!;
     const id = +req.params.id;
     try {
-      const updateRequest: Request = await prisma.request.update({
+      const updateTattooRequest: TattooRequest = await prisma.tattooRequest.update({
         where: {
           id,
           artistId: authorizedArtistId,
@@ -93,7 +93,7 @@ requestsRouter.patch(
           approvalStatus: req.body.approvalStatus,
         },
       });
-      return res.status(201).send(updateRequest);
+      return res.status(201).send(updateTattooRequest);
     } catch (e) {
       return res
         .status(204)
@@ -102,4 +102,4 @@ requestsRouter.patch(
   }
 );
 
-export { requestsRouter };
+export { tattooRequestsRouter };

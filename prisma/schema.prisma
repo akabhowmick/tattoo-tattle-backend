@@ -4,24 +4,24 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model Client {
-  id          Int        @id @default(autoincrement())
-  email       String     @unique
-  firstName   String
-  lastName    String
-  password    String
-  phoneNumber String
-  type        String
-  favorites   Favorite[]
-  request     Request[]
+  id            Int             @id @default(autoincrement())
+  email         String          @unique
+  firstName     String
+  lastName      String
+  password      String
+  phoneNumber   String
+  type          String
+  favorites     Favorite[]
+  tattooRequest TattooRequest[]
 }
 
 model Artist {
-  id             Int       @id @default(autoincrement())
-  email          String    @unique
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
   firstName      String
   lastName       String
   password       String
@@ -29,7 +29,7 @@ model Artist {
   statesLocation String
   tattooStyles   String
   type           String
-  requests       Request[]
+  tattooRequest  TattooRequest[]
   tattoos        Tattoo[]
 }
 
@@ -56,7 +56,7 @@ model Favorite {
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
-model Request {
+model TattooRequest {
   id                    Int    @id @default(autoincrement())
   clientName            String
   artistName            String

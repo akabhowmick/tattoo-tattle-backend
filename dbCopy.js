@@ -667,7 +667,7 @@ export const db_reseed = {
       tattooStyleInput: "Blackwork",
     },
   ],
-  requests: [
+  tattooRequests: [
     {
       clientName: "Amelia Boyer",
       artistName: "Jacky Nienow",

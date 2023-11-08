@@ -2,26 +2,25 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validateRequest } from "zod-express-middleware";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { Client, UnsecuredClientInfo } from "../types/interface";
 import {
   comparePassword,
   createTokenForUser,
   createUnsecuredInfo,
   clientAuthenticationMiddleware,
+  encryptPassword,
   // @ts-ignore
 } from "./auth-utils.ts";
 const prisma = new PrismaClient();
 
 const clientsRouter = Router();
 
-//no auth required
 clientsRouter.get("/", async (_req, res) => {
   const clients = await prisma.client.findMany();
   res.status(200).send(clients);
 });
 
-//no auth required
 clientsRouter.get("/:id", async (req, res) => {
   const id = +req.params.id;
   const client = await prisma.client
@@ -98,18 +97,17 @@ clientsRouter.post(
       const newClient = await prisma.client.create({
         data: {
           ...req.body,
+          password: await encryptPassword(req.body.password),
         },
       });
-      res.status(201).send(newClient);
+      const userInfo = createUnsecuredInfo(newClient as Client);
+      const userToken = await createTokenForUser(
+        userInfo as UnsecuredClientInfo
+      );
+      res.status(201).send({ token: userToken, user: userInfo });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        // The .code property can be accessed in a type-safe manner
-        if (e.code === "P2002") {
-          console.log(
-            "There is a unique constraint violation, a new user cannot be created with this email"
-          );
-        }
-      }
+      console.log(e);
+      res.status(500).send({ error: e });
       throw e;
     }
   }
@@ -124,7 +122,6 @@ clientsRouter.patch(
   }),
   clientAuthenticationMiddleware,
   async (req, res) => {
-    console.log(req.user);
     const id = +req.params.id;
     const authorizedClientEmail = req.user!.email!;
     try {
@@ -135,10 +132,14 @@ clientsRouter.patch(
         },
         data: {
           email: req.body.email,
-          password: req.body.password,
+          password: await encryptPassword(req.body.password!),
         },
       });
-      return res.status(201).send(updateClient);
+      const userInfo = createUnsecuredInfo(updateClient as Client);
+      const userToken = await createTokenForUser(
+        userInfo as UnsecuredClientInfo
+      );
+      res.status(201).send({ token: userToken, user: userInfo })
     } catch (e) {
       return res
         .status(204)

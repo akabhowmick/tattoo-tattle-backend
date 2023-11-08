@@ -2,13 +2,14 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validateRequest } from "zod-express-middleware";
-import { PrismaClient, Prisma } from "@prisma/client";
-import { Artist } from "../types/interface";
+import { PrismaClient } from "@prisma/client";
+import { Artist, UnsecuredArtistInfo } from "../types/interface";
 import {
   comparePassword,
   createTokenForUser,
   createUnsecuredInfo,
   artistAuthenticationMiddleware,
+  encryptPassword,
   // @ts-ignore
 } from "./auth-utils.ts";
 
@@ -34,7 +35,7 @@ artistsRouter.get("/:id", async (req, res) => {
     return res.status(400).send({ message: "id should be a number" });
   }
   if (!artist) {
-    return res.status(204).send({ error: "Nothing found" });
+    return res.status(204).send({ error: "No Content" });
   }
   return res.status(200).send(artist);
 });
@@ -66,7 +67,9 @@ artistsRouter.post(
       );
       if (checkPassword) {
         const userInfo = createUnsecuredInfo(artist as Artist);
-        const userToken = await createTokenForUser(userInfo);
+        const userToken = await createTokenForUser(
+          userInfo as UnsecuredArtistInfo
+        );
         return res.status(200).send({ token: userToken, user: userInfo });
       }
       return res.status(401).send({ message: "Invalid password" });
@@ -98,19 +101,17 @@ artistsRouter.post(
       const newArtist = await prisma.artist.create({
         data: {
           ...req.body,
+          password: await encryptPassword(req.body.password),
         },
       });
-      res.status(201).send(newArtist);
+      const userInfo = createUnsecuredInfo(newArtist as Artist);
+      const userToken = await createTokenForUser(
+        userInfo as UnsecuredArtistInfo
+      );
+      res.status(201).send({ token: userToken, user: userInfo });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        // The .code property can be accessed in a type-safe manner
-        if (e.code === "P2002") {
-          console.log(
-            "There is a unique constraint violation, a new user cannot be created with this email"
-          );
-        }
-      }
-      throw e;
+      console.log(e);
+      res.status(500).send({ error: e });
     }
   }
 );
@@ -134,10 +135,14 @@ artistsRouter.patch(
         },
         data: {
           email: req.body.email,
-          password: req.body.password,
+          password: await encryptPassword(req.body.password!),
         },
       });
-      return res.status(201).send(updateArtist);
+      const userInfo = createUnsecuredInfo(updateArtist as Artist);
+      const userToken = await createTokenForUser(
+        userInfo as UnsecuredArtistInfo
+      );
+      res.status(201).send({ token: userToken, user: userInfo });
     } catch (e) {
       return res
         .status(204)

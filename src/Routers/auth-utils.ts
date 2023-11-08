@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import * as jose from "jose";
 import bcrypt from "bcryptjs";
 import {
@@ -7,8 +6,6 @@ import {
   UnsecuredArtistInfo,
   UnsecuredClientInfo,
 } from "../types/interface";
-// @ts-ignore
-import { SECRET_API_KEY } from "../api/config.ts";
 import { NextFunction, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
@@ -21,7 +18,9 @@ export const comparePassword = (password: string, hashedPassword: string) => {
   return bcrypt.compare(password, hashedPassword);
 };
 
-const secret = SECRET_API_KEY;
+export const SECRET_API_KEY = new TextEncoder().encode(
+  "cc7e0d44fd473002f1c42167459001140ec6389b7353f8088f4d9a95f2f596f2"
+);
 const alg = "HS256";
 
 export const createTokenForUser = async (
@@ -29,7 +28,7 @@ export const createTokenForUser = async (
 ) => {
   const jwt = await new jose.SignJWT(user)
     .setProtectedHeader({ alg })
-    .sign(secret);
+    .sign(SECRET_API_KEY);
   return jwt;
 };
 
@@ -44,7 +43,7 @@ export const getDataFromAuthToken = async (token?: string) => {
     return false;
   }
   try {
-    const { payload } = await jose.jwtVerify(token, secret);
+    const { payload } = await jose.jwtVerify(token, SECRET_API_KEY);
     return payload;
   } catch (error) {
     return false;

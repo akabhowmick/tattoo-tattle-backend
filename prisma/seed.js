@@ -22,9 +22,9 @@ async function main2() {
       data: tattoo,
     });
   }
-  for (let request of db_reseed.requests) {
-    await prisma.request.create({
-      data: request,
+  for (let tattooRequest of db_reseed.tattooRequests) {
+    await prisma.tattooRequest.create({
+      data: tattooRequest,
     });
   }
   for (let favorite of db_reseed.favorites) {

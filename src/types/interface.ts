@@ -4,7 +4,7 @@ export type Client = {
   email: string;
   password: string;
   phoneNumber: string;
-  id?: number;
+  id: number;
   type: string;
 };
 
@@ -13,7 +13,7 @@ export type UnsecuredClientInfo = {
   lastName: string;
   email: string;
   phoneNumber: string;
-  id?: number;
+  id: number;
   type: string;
 };
 
@@ -23,9 +23,9 @@ export type Artist = {
   email: string;
   password: string;
   phoneNumber: string;
-  statesLocation?: string;
-  tattooStyles?: string;
-  id?: number;
+  statesLocation: string;
+  tattooStyles: string;
+  id: number;
   type: string;
 };
 
@@ -34,9 +34,9 @@ export type UnsecuredArtistInfo = {
   lastName: string;
   email: string;
   phoneNumber: string;
-  statesLocation?: string;
-  tattooStyles?: string;
-  id?: number;
+  statesLocation: string;
+  tattooStyles: string;
+  id: number;
   type: string;
 };
 
@@ -50,10 +50,10 @@ export interface Tattoo {
   price: number;
   statesInput: string;
   tattooStyleInput: string;
-  id?: number;
+  id: number;
 }
 
-export interface Request {
+export interface TattooRequest {
   clientName: string;
   artistName: string;
   messageBody: string;
@@ -61,13 +61,13 @@ export interface Request {
   tattooOfInterestTitle: string;
   artistId: number;
   clientId: number;
-  id?: number;
+  id: number;
 }
 
 export interface Favorite {
   clientId: number;
   tattooId: number;
-  id?: number;
+  id: number;
 }
 
 export interface Info {
